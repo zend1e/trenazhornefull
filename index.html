@@ -1,23 +1,3 @@
-<!-- 
-Почему увеличение и уменьшение слова "денсаулык" может не работать?
-- Если анимация использует transform (scale), но элемент уже стилизован с transform (например, для позиционирования через translate), то CSS transform-параметры могут перезаписываться, и анимация не будет видна.
-- Любая внешняя стилизация или Tailwind класс с transform может конфликтовать с анимацией.
-Решение:
-- Сделать внешнюю обертку для позиционирования (например, центрирование через wrapper), а сам текст анимировать отдельно через scale.
-
-Где и как слово "денсаулык" выводится на экран и просто стоит посреди страницы:
-- Слово "денсаулык" расположено ПОСЕРЕДИНЕ страницы в абсолютном центре с помощью grow-shrink-wrapper. Вот этот момент:
-  <div class="grow-shrink-wrapper">
-    <span class="animate-custom-grow-and-shrink text-4xl font-bold">денсаулык</span>
-  </div>
-
-- Обертка фиксирует позицию по центру, а анимация работает только с масштабированием слова.
-
-Как после предложения вывести слово "шыншыл", чтобы оно увеличивалось и уменьшалось:
-- Слово "шыншыл" вставляется после предложения прямо в потоке текста и обрабатывается той же анимацией.
-
--->
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -30,69 +10,40 @@
       body {
         font-family: 'Segoe UI', Arial, sans-serif;
       }
-      @keyframes scaleupdown {
-        0% { transform: scale(1); }
-        45% { transform: scale(1.36); }
-        70% { transform: scale(1); }
-        100% { transform: scale(1); }
-      }
-      .animate-scaleupdown {
-        animation: scaleupdown 1.08s ease-in-out;
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; transform: scale(0.9); }
-        to { opacity: 1; transform: scale(1); }
-      }
-      .animate-fadeIn {
-        animation: fadeIn 0.8s ease-in;
-      }
-      @keyframes custom-blur-anim {
-        from { filter: blur(12px); opacity: 0.6; }
-        to { filter: blur(0); opacity: 1; }
-      }
-      .animate-custom-blur {
-        animation: custom-blur-anim 4s linear forwards;
-      }
-
-      @keyframes custom-blur-anim-slow {
-        from { filter: blur(12px); opacity: 0.6; }
-        to { filter: blur(0); opacity: 1; }
-      }
-      .animate-custom-blur-slow {
-        animation: custom-blur-anim-slow 4s linear forwards;
-      }
 
       /*
-        АНИМАЦИЯ ДЛЯ СЛОВА "ДЕНСАУЛЫК"
-
-        1. ЧТО ЭТО ЗА КОД?
-           - `@keyframes custom-grow-and-shrink`: Это "рецепт" анимации. Он говорит браузеру:
-             - Начать с обычного размера (scale(1)).
-             - В середине анимации увеличить размер в 4 раза (scale(4)).
-             - В конце вернуться к обычному размеру (scale(1)).
-           - `.animate-custom-grow-and-shrink`: Это CSS-класс, который "применяет" этот рецепт к любому элементу.
-             - `animation: ... 4s ...`: Мы говорим, что вся анимация должна длиться 4 секунды.
-
-        2. КАК ЭТО ИСПОЛЬЗУЕТСЯ?
-           - В файле `components/Trainer.tsx` есть специальная логика.
-           - Когда вы заканчиваете упражнение с пословицей "Денсаулық– зор байлық", программа показывает слово "денсаулык".
-           - Этому слову присваивается класс `animate-custom-grow-and-shrink`, что и запускает эту анимацию.
-           - Это сделано как дополнительное упражнение для глаз: сфокусироваться на слове, которое плавно увеличивается и уменьшается в центре экрана.
+        Оставлена только нужная анимация для масштабирования слова.
+        Важная идея: позиционирование через обёртку (.grow-shrink-wrapper),
+        а transform/scale применяем только к самому тексту (.animate-custom-grow-and-shrink).
       */
       @keyframes custom-grow-and-shrink {
-        0%   { transform: scale(1);}
-        50%  { transform: scale(4);}
-        100% { transform: scale(1);}
+        0%   { transform: scale(1); }
+        50%  { transform: scale(4); }
+        100% { transform: scale(1); }
       }
+
       .animate-custom-grow-and-shrink {
         display: inline-block;
         animation: custom-grow-and-shrink 3s ease-in-out forwards;
+        will-change: transform;
       }
+
+      /* Центрирование через обёртку (обёртка использует translate только для позиционирования) */
       .grow-shrink-wrapper {
         position: absolute;
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
+        pointer-events: none;
+        text-align: center;
+      }
+
+      /* Простейший стиль для встроенного варианта слова внутри текста */
+      .inline-grow {
+        display: inline-block;
+        vertical-align: baseline;
+        animation: custom-grow-and-shrink 3s ease-in-out forwards;
+        will-change: transform;
       }
     </style>
     <script type="importmap">
@@ -104,10 +55,24 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
-</head>
+    <link rel="stylesheet" href="/index.css">
+  </head>
   <body>
     <div id="root"></div>
+
+    <!-- Пример: слово "денсаулык" по центру (используйте этот фрагмент в нужном месте) -->
+    <div class="grow-shrink-wrapper" aria-hidden="true">
+      <span class="animate-custom-grow-and-shrink text-4xl font-bold">денсаулык</span>
+    </div>
+
+    <!-- Пример: вставка слова "шыншыл" после предложения в потоке текста -->
+    <div style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+      <p class="text-lg">
+        Бұл мысал сөйлем. Сөйлем аяқталғаннан кейін сөзді көрсетеміз —
+        <span class="inline-grow font-semibold">шыншыл</span>.
+      </p>
+    </div>
+
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
